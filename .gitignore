@@ -1,0 +1,19 @@
+# Python
+ai_engine/venv/
+__pycache__/
+*.pyc
+ai_engine/.env
+ai_engine/face_landmarker.task
+
+# C# / .NET
+client_app/bin/
+client_app/obj/
+
+# Flutter
+dashboard/.dart_tool/
+dashboard/build/
+dashboard/.pub-cache/
+dashboard/.pub/
+
+# Database
+*.sql#
