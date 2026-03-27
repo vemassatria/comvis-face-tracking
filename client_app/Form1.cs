@@ -9,6 +9,7 @@ namespace StudentClient
     public partial class Form1 : Form
     {
         private TextBox txtNis;
+        private TextBox txtNama;
         private TextBox txtSessionCode;
         private Button btnStart;
         private NotifyIcon trayIcon;
@@ -68,19 +69,24 @@ namespace StudentClient
             // Form Body
             Label lblHeader = new Label { Text = "Sesi Pembelajaran", Font = new Font("Segoe UI", 16, FontStyle.Bold), ForeColor = Color.White, Location = new Point(95, 60), AutoSize = true };
             
-            Label lblNis = new Label { Text = "NIS:", Font = new Font("Segoe UI", 10), ForeColor = Color.LightGray, Location = new Point(50, 120), AutoSize = true };
-            txtNis = new TextBox { Location = new Point(150, 118), Width = 180, Font = new Font("Segoe UI", 10), BackColor = Color.FromArgb(50, 50, 50), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            Label lblNama = new Label { Text = "Nama:", Font = new Font("Segoe UI", 10), ForeColor = Color.LightGray, Location = new Point(50, 110), AutoSize = true };
+            txtNama = new TextBox { Location = new Point(150, 108), Width = 180, Font = new Font("Segoe UI", 10), BackColor = Color.FromArgb(50, 50, 50), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
 
-            Label lblSession = new Label { Text = "Kode Kelas:", Font = new Font("Segoe UI", 10), ForeColor = Color.LightGray, Location = new Point(50, 160), AutoSize = true };
-            txtSessionCode = new TextBox { Location = new Point(150, 158), Width = 180, Font = new Font("Segoe UI", 10), BackColor = Color.FromArgb(50, 50, 50), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            Label lblNis = new Label { Text = "NIS:", Font = new Font("Segoe UI", 10), ForeColor = Color.LightGray, Location = new Point(50, 145), AutoSize = true };
+            txtNis = new TextBox { Location = new Point(150, 143), Width = 180, Font = new Font("Segoe UI", 10), BackColor = Color.FromArgb(50, 50, 50), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
 
-            btnStart = new Button { Text = "Mulai Sesi", Location = new Point(150, 210), Width = 180, Height = 35, Font = new Font("Segoe UI", 10, FontStyle.Bold), BackColor = Color.FromArgb(0, 122, 204), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            Label lblSession = new Label { Text = "PIN Kelas:", Font = new Font("Segoe UI", 10), ForeColor = Color.LightGray, Location = new Point(50, 180), AutoSize = true };
+            txtSessionCode = new TextBox { Location = new Point(150, 178), Width = 180, Font = new Font("Segoe UI", 10), BackColor = Color.FromArgb(50, 50, 50), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+
+            btnStart = new Button { Text = "Mulai Sesi", Location = new Point(150, 225), Width = 180, Height = 35, Font = new Font("Segoe UI", 10, FontStyle.Bold), BackColor = Color.FromArgb(0, 122, 204), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             btnStart.FlatAppearance.BorderSize = 0;
             btnStart.Cursor = Cursors.Hand;
             btnStart.Click += BtnStart_Click;
 
             this.Controls.Add(headerPanel);
             this.Controls.Add(lblHeader);
+            this.Controls.Add(lblNama);
+            this.Controls.Add(txtNama);
             this.Controls.Add(lblNis);
             this.Controls.Add(txtNis);
             this.Controls.Add(lblSession);
@@ -114,17 +120,33 @@ namespace StudentClient
 
         private void BtnStart_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtNis.Text) || string.IsNullOrWhiteSpace(txtSessionCode.Text))
+            if (string.IsNullOrWhiteSpace(txtNis.Text) || string.IsNullOrWhiteSpace(txtSessionCode.Text) || string.IsNullOrWhiteSpace(txtNama.Text))
             {
-                MessageBox.Show("Harap isi NIS dan Kode Kelas!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Harap isi Nama, NIS dan PIN Kelas secara lengkap!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             try
             {
+                using (System.Net.WebClient client = new System.Net.WebClient())
+                {
+                    string url = "http://127.0.0.1:5000/api/cek-sesi/" + txtSessionCode.Text;
+                    string resp = client.DownloadString(url);
+                    if (resp.Contains("\"status\": \"not_found\""))
+                    {
+                        MessageBox.Show("PIN Kelas tidak ditemukan dalam sistem!", "Akses Ditolak", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    if (resp.Contains("\"status\": \"closed\""))
+                    {
+                        MessageBox.Show("Sesi kelas ini sudah DITUTUP atau diakhiri oleh Guru!", "Akses Ditolak", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                }
+
                 ProcessStartInfo startInfo = new ProcessStartInfo();
                 startInfo.FileName = @"c:\KULIAH\cinta\comvis\ai_engine\venv\Scripts\python.exe";
-                startInfo.Arguments = @"c:\KULIAH\cinta\comvis\ai_engine\main.py";
+                startInfo.Arguments = $@"c:\KULIAH\cinta\comvis\ai_engine\main.py ""{txtSessionCode.Text}"" ""{txtNis.Text}"" ""{txtNama.Text}""";
                 startInfo.UseShellExecute = false;
                 startInfo.CreateNoWindow = true; 
                 Process.Start(startInfo);

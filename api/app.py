@@ -9,6 +9,14 @@ load_dotenv(dotenv_path='../ai_engine/.env')
 
 app = Flask(__name__)
 
+# Bypass aturan CORS browser untuk Flutter Web
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+    response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
+    return response
+
 def get_connection():
     try:
         conn = mariadb.connect(
@@ -66,6 +74,75 @@ def create_session():
         conn.commit()
         return jsonify({"status": "success", "message": f"Sesi {id_sesi} dimulai."})
     except mariadb.Error as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/sesi-aktif', methods=['GET'])
+def get_sesi_aktif():
+    conn = get_connection()
+    if conn is None:
+        return jsonify({'error': 'Database error'}), 500
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id_sesi, mata_pelajaran FROM tb_sesi_kelas WHERE status = 'Berjalan'")
+        sessions = [{"id_sesi": row[0], "mata_pelajaran": row[1]} for row in cursor.fetchall()]
+        return jsonify({'status': 'success', 'data': sessions}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/update-guru', methods=['POST'])
+def update_guru():
+    data = request.json
+    if not data: return jsonify({"error": "No data"}), 400
+    
+    id_sesi = data.get('id_sesi')
+    nama_guru = data.get('nama_guru')
+    
+    conn = get_connection()
+    if conn is None: return jsonify({"error": "DB err"}), 500
+    try:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE tb_sesi_kelas SET nama_guru = ? WHERE id_sesi = ?", (nama_guru, id_sesi))
+        conn.commit()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/tutup-sesi', methods=['POST'])
+def tutup_sesi():
+    data = request.json
+    id_sesi = data.get('id_sesi')
+    conn = get_connection()
+    if conn is None: return jsonify({"error": "DB err"}), 500
+    try:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE tb_sesi_kelas SET waktu_selesai = NOW(), status = 'Selesai' WHERE id_sesi = ?", (id_sesi,))
+        conn.commit()
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/cek-sesi/<id_sesi>', methods=['GET'])
+def cek_sesi(id_sesi):
+    conn = get_connection()
+    if conn is None: return jsonify({"error": "DB err"}), 500
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT status FROM tb_sesi_kelas WHERE id_sesi = ?", (id_sesi,))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({"status": "not_found", "message": "PIN tidak ditemukan."})
+        if row['status'] != 'Berjalan':
+            return jsonify({"status": "closed", "message": "Sesi telah ditutup."})
+        return jsonify({"status": "active", "message": "Sesi berjalan."})
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
