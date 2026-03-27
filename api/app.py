@@ -1,15 +1,13 @@
 from flask import Flask, jsonify, request
-import mariadb
+import pymysql
 import sys
 import os
 from dotenv import load_dotenv
 
-# Gunakan env dari direktori ai_engine untuk prototype
 load_dotenv(dotenv_path='../ai_engine/.env')
 
 app = Flask(__name__)
 
-# Bypass aturan CORS browser untuk Flutter Web
 @app.after_request
 def add_cors_headers(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -19,15 +17,16 @@ def add_cors_headers(response):
 
 def get_connection():
     try:
-        conn = mariadb.connect(
-            user=os.getenv("DB_USER", "root"),
-            password=os.getenv("DB_PASS", "mtcdb"),
-            host=os.getenv("DB_HOST", "127.0.0.1"),
-            port=int(os.getenv("DB_PORT", 3306)),
-            database=os.getenv("DB_NAME", "classinsight_db")
+        conn = pymysql.connect(
+            host=os.getenv("DB_HOST", "db-classinsight-it-18cf.j.aivencloud.com"),
+            port=int(os.getenv("DB_PORT", 15183)),
+            user=os.getenv("DB_USER", "avnadmin"),
+            password=os.getenv("DB_PASS"),
+            database=os.getenv("DB_NAME", "defaultdb"),
+            autocommit=True
         )
         return conn
-    except mariadb.Error as e:
+    except Exception as e:
         print(f"Error connecting to MariaDB: {e}")
         return None
 
@@ -38,26 +37,23 @@ def get_status_kelas(id_sesi):
         return jsonify({"error": "Database connection failed"}), 500
         
     try:
-        cursor = conn.cursor(dictionary=True)
-        # Ambil data log atensi untuk sesi ini (misal 50 log terakhir)
-        query = "SELECT * FROM tb_log_atensi WHERE id_sesi = ? ORDER BY waktu_kejadian DESC LIMIT 50"
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+        query = "SELECT * FROM tb_log_atensi WHERE id_sesi = %s ORDER BY waktu_kejadian DESC LIMIT 50"
         cursor.execute(query, (id_sesi,))
         logs = cursor.fetchall()
         
-        # Format respons JSON standar
         return jsonify({
             "status": "success",
             "id_sesi": id_sesi,
             "data": logs
         })
-    except mariadb.Error as e:
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
 
 @app.route('/api/sesi', methods=['POST'])
 def create_session():
-    # Helper untuk Dashboard: Memulai Kelas Baru
     data = request.json
     id_sesi = data.get('id_sesi')
     mata_pelajaran = data.get('mata_pelajaran')
@@ -69,11 +65,10 @@ def create_session():
         
     try:
         cursor = conn.cursor()
-        query = "INSERT INTO tb_sesi_kelas (id_sesi, mata_pelajaran, nama_guru, waktu_mulai) VALUES (?, ?, ?, NOW())"
+        query = "INSERT INTO tb_sesi_kelas (id_sesi, mata_pelajaran, nama_guru, waktu_mulai) VALUES (%s, %s, %s, NOW())"
         cursor.execute(query, (id_sesi, mata_pelajaran, nama_guru))
-        conn.commit()
         return jsonify({"status": "success", "message": f"Sesi {id_sesi} dimulai."})
-    except mariadb.Error as e:
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
@@ -105,8 +100,7 @@ def update_guru():
     if conn is None: return jsonify({"error": "DB err"}), 500
     try:
         cursor = conn.cursor()
-        cursor.execute("UPDATE tb_sesi_kelas SET nama_guru = ? WHERE id_sesi = ?", (nama_guru, id_sesi))
-        conn.commit()
+        cursor.execute("UPDATE tb_sesi_kelas SET nama_guru = %s WHERE id_sesi = %s", (nama_guru, id_sesi))
         return jsonify({"status": "success"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -121,8 +115,7 @@ def tutup_sesi():
     if conn is None: return jsonify({"error": "DB err"}), 500
     try:
         cursor = conn.cursor()
-        cursor.execute("UPDATE tb_sesi_kelas SET waktu_selesai = NOW(), status = 'Selesai' WHERE id_sesi = ?", (id_sesi,))
-        conn.commit()
+        cursor.execute("UPDATE tb_sesi_kelas SET waktu_selesai = NOW(), status = 'Selesai' WHERE id_sesi = %s", (id_sesi,))
         return jsonify({"status": "success"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -134,8 +127,8 @@ def cek_sesi(id_sesi):
     conn = get_connection()
     if conn is None: return jsonify({"error": "DB err"}), 500
     try:
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT status FROM tb_sesi_kelas WHERE id_sesi = ?", (id_sesi,))
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+        cursor.execute("SELECT status FROM tb_sesi_kelas WHERE id_sesi = %s", (id_sesi,))
         row = cursor.fetchone()
         if not row:
             return jsonify({"status": "not_found", "message": "PIN tidak ditemukan."})
@@ -148,4 +141,5 @@ def cek_sesi(id_sesi):
         conn.close()
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
