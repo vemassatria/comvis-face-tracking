@@ -130,7 +130,7 @@ namespace StudentClient
             {
                 using (System.Net.WebClient client = new System.Net.WebClient())
                 {
-                    string url = "http://127.0.0.1:5000/api/cek-sesi/" + txtSessionCode.Text;
+                    string url = "https://api-classinsight.onrender.com/api/cek-sesi/" + txtSessionCode.Text;
                     string resp = client.DownloadString(url);
                     if (resp.Contains("\"status\": \"not_found\""))
                     {
@@ -145,8 +145,24 @@ namespace StudentClient
                 }
 
                 ProcessStartInfo startInfo = new ProcessStartInfo();
+            
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string pyPortable = System.IO.Path.Combine(baseDir, "ai_engine", "main.py");
+            string venvPortable = System.IO.Path.Combine(baseDir, "ai_engine", "venv", "Scripts", "python.exe");
+
+            if(System.IO.File.Exists(venvPortable) && System.IO.File.Exists(pyPortable)) {
+                // Di komputer teman yang dikirim via ZIP lengkap dengan VENV
+                startInfo.FileName = venvPortable;
+                startInfo.Arguments = $"\"{pyPortable}\" \"{txtSessionCode.Text}\" \"{txtNis.Text}\" \"{txtNama.Text}\"";
+            } else if (System.IO.File.Exists(pyPortable)) {
+                // Di komputer teman tanpa VENV, tapi ada global Python
+                startInfo.FileName = "python";
+                startInfo.Arguments = $"\"{pyPortable}\" \"{txtSessionCode.Text}\" \"{txtNis.Text}\" \"{txtNama.Text}\"";
+            } else {
+                // Mode Debugging Lokal di laptop Anda
                 startInfo.FileName = @"c:\KULIAH\cinta\comvis\ai_engine\venv\Scripts\python.exe";
-                startInfo.Arguments = $@"c:\KULIAH\cinta\comvis\ai_engine\main.py ""{txtSessionCode.Text}"" ""{txtNis.Text}"" ""{txtNama.Text}""";
+                startInfo.Arguments = $@"""c:\KULIAH\cinta\comvis\ai_engine\main.py"" ""{txtSessionCode.Text}"" ""{txtNis.Text}"" ""{txtNama.Text}""";
+            }
                 startInfo.UseShellExecute = false;
                 startInfo.CreateNoWindow = true; 
                 Process.Start(startInfo);

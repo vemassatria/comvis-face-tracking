@@ -50,7 +50,7 @@ class _PortalScreenState extends State<PortalScreen> {
 
   Future<void> fetchActiveSessions() async {
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1:5000/api/sesi-aktif'));
+      final response = await http.get(Uri.parse('https://api-classinsight.onrender.com/api/sesi-aktif'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -82,7 +82,7 @@ class _PortalScreenState extends State<PortalScreen> {
     setState(() { isLoading = true; });
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:5000/api/sesi'),
+        Uri.parse('https://api-classinsight.onrender.com/api/sesi'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'id_sesi': newPin,
@@ -130,7 +130,7 @@ class _PortalScreenState extends State<PortalScreen> {
     bool isClosed = false;
 
     try {
-      final checkRes = await http.get(Uri.parse('http://127.0.0.1:5000/api/cek-sesi/$finalSession'));
+      final checkRes = await http.get(Uri.parse('https://api-classinsight.onrender.com/api/cek-sesi/$finalSession'));
       if (checkRes.statusCode == 200) {
         final dataCheck = json.decode(checkRes.body);
         if (dataCheck['status'] == 'not_found') {
@@ -143,7 +143,7 @@ class _PortalScreenState extends State<PortalScreen> {
 
       if (!isClosed) {
         await http.post(
-          Uri.parse('http://127.0.0.1:5000/api/update-guru'),
+          Uri.parse('https://api-classinsight.onrender.com/api/update-guru'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({'id_sesi': finalSession, 'nama_guru': guruName}),
         );
@@ -330,7 +330,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> fetchLogs() async {
     if (currentSession.isEmpty) return;
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1:5000/api/status-kelas/$currentSession'));
+      final response = await http.get(Uri.parse('https://api-classinsight.onrender.com/api/status-kelas/$currentSession'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (mounted) setState(() { logs = data['data']; });
@@ -377,7 +377,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           Navigator.pop(ctx);
                           try {
                             await http.post(
-                              Uri.parse('http://127.0.0.1:5000/api/tutup-sesi'),
+                              Uri.parse('https://api-classinsight.onrender.com/api/tutup-sesi'),
                               headers: {'Content-Type': 'application/json'},
                               body: json.encode({'id_sesi': currentSession}),
                             );
