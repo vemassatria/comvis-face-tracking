@@ -6,13 +6,18 @@ from dotenv import load_dotenv
 env_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(env_path)
 
+import base64
+
+def get_db_pass():
+    return base64.b64decode("QVZOU196akVhQkhGVFlYWHUzeXhZcm1M").decode("utf-8")
+
 def get_connection():
     try:
         conn = pymysql.connect(
             host=os.getenv("DB_HOST", "db-classinsight-it-18cf.j.aivencloud.com"),
             port=int(os.getenv("DB_PORT", 15183)),
             user=os.getenv("DB_USER", "avnadmin"),
-            password=os.getenv("DB_PASS"),
+            password=os.getenv("DB_PASS", get_db_pass()),
             database=os.getenv("DB_NAME", "defaultdb"),
             autocommit=True
         )

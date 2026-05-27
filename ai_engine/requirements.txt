@@ -1,5 +1,6 @@
 opencv-python
 mediapipe
-mariadb
-Flask
+pymysql
+cryptography
 python-dotenv
+deepface
