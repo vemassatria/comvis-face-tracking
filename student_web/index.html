@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClassInsight | Student Portal</title>
+    <!-- Modern Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <div class="container">
+        <!-- LOGIN SECTION -->
+        <div id="login-section" class="card active">
+            <div class="header">
+                <h2>ClassInsight</h2>
+                <p>Portal Akses Siswa</p>
+            </div>
+            
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="nama">Nama Lengkap</label>
+                    <input type="text" id="nama" placeholder="Masukkan Nama Lengkap" required>
+                </div>
+                <div class="input-group">
+                    <label for="nis">NIS (Nomor Induk Siswa)</label>
+                    <input type="text" id="nis" placeholder="Masukkan NIS Anda" required>
+                </div>
+                <div class="input-group">
+                    <label for="pin">PIN Kelas</label>
+                    <input type="text" id="pin" placeholder="Masukkan PIN dari Guru" required>
+                </div>
+                <button type="submit" id="btn-start" class="btn-primary">Mulai Sesi Kelas</button>
+            </form>
+            <div id="login-error" class="error-text"></div>
+        </div>
+
+        <!-- HUD / CAMERA SECTION -->
+        <div id="hud-section" class="card" style="display: none;">
+            <div class="hud-header">
+                <h3>Monitor Atensi AI</h3>
+                <span id="session-info" class="badge">Sesi Aktif</span>
+            </div>
+            
+            <div class="camera-wrapper">
+                <video id="webcam" autoplay playsinline></video>
+                <canvas id="output_canvas"></canvas>
+                
+                <!-- OSD / Overlays -->
+                <div class="osd-top-left" id="status-text">MENGINISIALISASI SISTEM...</div>
+                <div class="osd-top-right" id="emotion-text">Emosi: -</div>
+                
+                <div class="osd-bottom-left telemetry-panel">
+                    <div class="telemetry-title">[DATA TELEMETRI]</div>
+                    <div id="tele-ear">EAR (Mata): -</div>
+                    <div id="tele-mar">MAR (Mulut): -</div>
+                    <div id="tele-jarak">Jarak: -</div>
+                    <div id="tele-kedipan">Kedipan: 0</div>
+                    <div id="tele-arah">Arah Mata: -</div>
+                </div>
+                
+                <div class="osd-bottom-center" id="penalty-text"></div>
+            </div>
+            
+            <div class="hud-footer">
+                <button id="btn-stop" class="btn-danger">Akhiri Sesi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script src="app.js" type="module"></script>
+</body>
+</html>

@@ -140,6 +140,45 @@ def cek_sesi(id_sesi):
     finally:
         conn.close()
 
+@app.route('/api/register-student', methods=['POST'])
+def register_student():
+    data = request.json
+    nis = data.get('nis')
+    nama = data.get('nama')
+    
+    conn = get_connection()
+    if conn is None: return jsonify({"error": "DB err"}), 500
+    try:
+        cursor = conn.cursor()
+        query = "INSERT IGNORE INTO tb_siswa (nis, nama_lengkap, kelas) VALUES (%s, %s, 'UMUM')"
+        cursor.execute(query, (nis, nama))
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/log-atensi', methods=['POST'])
+def log_atensi_api():
+    data = request.json
+    id_sesi = data.get('id_sesi')
+    nis = data.get('nis')
+    durasi = data.get('durasi_detik')
+    kategori = data.get('kategori')
+    keterangan = data.get('keterangan', '')
+    
+    conn = get_connection()
+    if conn is None: return jsonify({"error": "DB err"}), 500
+    try:
+        cursor = conn.cursor()
+        query = "INSERT INTO tb_log_atensi (id_sesi, nis, waktu_kejadian, durasi_detik, kategori, keterangan) VALUES (%s, %s, NOW(), %s, %s, %s)"
+        cursor.execute(query, (id_sesi, nis, durasi, kategori, keterangan))
+        return jsonify({"status": "success"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
