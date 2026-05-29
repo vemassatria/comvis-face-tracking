@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "ClassInsight AI Monitor",
+  "version": "1.0.0",
+  "description": "Background AI Monitoring for ClassInsight",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "background": {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  },
+  "permissions": [
+    "storage",
+    "offscreen"
+  ],
+  "host_permissions": [
+    "http://localhost:5000/*"
+  ]
+}
