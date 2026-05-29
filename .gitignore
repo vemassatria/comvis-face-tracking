@@ -17,3 +17,8 @@ dashboard/.pub/
 
 # Database
 *.sql#
+
+node_modules/
+dist/
+.env
+
