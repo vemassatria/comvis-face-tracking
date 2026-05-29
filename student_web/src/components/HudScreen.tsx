@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Camera, AlertTriangle, ShieldCheck, Activity, Maximize2, Users, MicOff, Video, MessageSquare, Hand, PhoneOff } from 'lucide-react';
+import { Maximize, AlertCircle, ShieldCheck, Activity, Users, MicOff, Video, MessageSquare, Hand, PhoneOff } from 'lucide-react';
 import { StudentSessionData } from '../App';
 import { api } from '../api';
 import { FaceAnalyzer, TelemetryData } from '../lib/FaceAnalyzer';
-import { AlertCircle } from 'lucide-react';
 
 interface Props {
   session: StudentSessionData;
@@ -164,7 +163,7 @@ export default function HudScreen({ session, onEndSession }: Props) {
 
   // Dummy participants for the mock meeting UI
   const dummyParticipants = [
-    { name: session.namaGuru || 'Guru (Host)', initial: 'G', isHost: true },
+    { name: 'Guru (Host)', initial: 'G', isHost: true },
     { name: 'Ahmad Budi', initial: 'A' },
     { name: 'Siti Rahma', initial: 'S' },
     { name: 'Reza Oktovian', initial: 'R' },
@@ -172,33 +171,121 @@ export default function HudScreen({ session, onEndSession }: Props) {
   ];
 
   return (
-        {penaltyText && (
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-fade-in flex flex-col items-center">
-            <AlertCircle size={48} className="text-danger-500 mb-2 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
-            <h2 className="text-3xl md:text-5xl font-black text-danger-500 tracking-wider font-mono drop-shadow-[0_0_10px_rgba(239,68,68,0.8)] bg-slate-900/40 px-6 py-2 rounded-xl backdrop-blur-sm border border-danger-500/30">
-              {penaltyText}
-            </h2>
-          </div>
-        )}
+    <div className="flex flex-col h-screen bg-[#202124] overflow-hidden text-white font-sans">
+      
+      {/* Top Header */}
+      <div className="flex justify-between items-center px-4 py-2 bg-[#202124]">
+        <div className="flex flex-col">
+          <span className="font-medium text-lg flex items-center gap-2">
+            <ShieldCheck size={20} className="text-blue-400" />
+            ClassInsight AI Meeting
+          </span>
+        </div>
+        <div className="flex flex-col items-end">
+          <span className="text-sm font-mono text-slate-400">PIN KELAS: {session.pin}</span>
+          <span className="text-blue-400 font-bold uppercase tracking-widest">{session.mataPelajaran || 'KELAS UMUM'}</span>
+        </div>
+      </div>
 
-        {/* Bottom Bar */}
-        <div className="flex justify-between items-end">
-          <div className="glass-panel px-5 py-4 border-l-4 border-l-primary-500 font-mono text-xs text-slate-300 space-y-1.5 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
-            <div className="text-primary-400 font-bold mb-2 tracking-wider flex items-center gap-1.5"><Maximize size={14}/> TELEMETRY DATA</div>
-            <div className="flex justify-between gap-8"><span>EAR (Mata)</span> <span className="text-white">{telemetry?.emaEar.toFixed(2) || '-'}</span></div>
-            <div className="flex justify-between gap-8"><span>MAR (Mulut)</span> <span className="text-white">{telemetry?.emaMar.toFixed(2) || '-'}</span></div>
-            <div className="flex justify-between gap-8"><span>Jarak</span> <span className="text-white">{telemetry?.proximityStatus || '-'}</span></div>
-            <div className="flex justify-between gap-8"><span>Kedipan</span> <span className="text-white">{telemetry?.blinkCount || '0'}</span></div>
-            <div className="flex justify-between gap-8"><span>Arah Mata</span> <span className="text-white">{telemetry?.gazeDirection || '-'}</span></div>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col md:flex-row relative">
+        
+        {/* Main Video Area */}
+        <div className="flex-1 relative bg-[#303134] rounded-xl m-4 overflow-hidden border border-[#3c4043] flex items-center justify-center">
+          
+          {/* AI HUD OVERLAY */}
+          <div className="absolute inset-0 pointer-events-none z-10 flex flex-col">
+            
+            {/* Status Bar */}
+            <div className="absolute top-4 left-4 flex gap-2">
+              <div className="glass-panel px-3 py-1.5 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span className="text-xs font-mono font-semibold tracking-wider text-green-400">AI ACTIVE</span>
+              </div>
+              <div className="glass-panel px-3 py-1.5 flex items-center gap-2">
+                <Activity size={14} className={telemetry?.valStatus ? "text-danger-400" : "text-green-400"} />
+                <span className="text-xs font-mono">STATUS: {telemetry?.valStatus || 'FOKUS'}</span>
+              </div>
+            </div>
+
+            {/* Video Streams */}
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted 
+              className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
+            />
+            <canvas 
+              ref={canvasRef} 
+              className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
+            />
+
+            {/* Penalty Warning Overlay */}
+            {penaltyText && (
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-fade-in flex flex-col items-center">
+                <AlertCircle size={48} className="text-danger-500 mb-2 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
+                <h2 className="text-3xl md:text-5xl font-black text-danger-500 tracking-wider font-mono drop-shadow-[0_0_10px_rgba(239,68,68,0.8)] bg-slate-900/40 px-6 py-2 rounded-xl backdrop-blur-sm border border-danger-500/30">
+                  {penaltyText}
+                </h2>
+              </div>
+            )}
+
+            {/* Bottom Telemetry Bar */}
+            <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+              <div className="glass-panel px-5 py-4 border-l-4 border-l-primary-500 font-mono text-xs text-slate-300 space-y-1.5 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+                <div className="text-primary-400 font-bold mb-2 tracking-wider flex items-center gap-1.5"><Maximize size={14}/> TELEMETRY DATA</div>
+                <div className="flex justify-between gap-8"><span>EAR (Mata)</span> <span className="text-white">{telemetry?.emaEar.toFixed(2) || '-'}</span></div>
+                <div className="flex justify-between gap-8"><span>MAR (Mulut)</span> <span className="text-white">{telemetry?.emaMar.toFixed(2) || '-'}</span></div>
+                <div className="flex justify-between gap-8"><span>Jarak</span> <span className="text-white">{telemetry?.proximityStatus || '-'}</span></div>
+                <div className="flex justify-between gap-8"><span>Kedipan</span> <span className="text-white">{telemetry?.blinkCount || '0'}</span></div>
+                <div className="flex justify-between gap-8"><span>Arah Mata</span> <span className="text-white">{telemetry?.gazeDirection || '-'}</span></div>
+              </div>
+            </div>
           </div>
           
-          <button 
-            onClick={handleEndClass} 
-            className="btn-danger pointer-events-auto backdrop-blur-md bg-danger-600/80 shadow-[0_0_20px_rgba(220,38,38,0.4)]"
-          >
-            Akhiri Sesi
-          </button>
         </div>
+
+        {/* Right Sidebar - Other Participants */}
+        <div className="w-full md:w-64 bg-[#202124] p-4 flex flex-col gap-2 overflow-y-auto">
+          {dummyParticipants.map((p, idx) => (
+            <div key={idx} className="relative aspect-video bg-[#3c4043] rounded-lg overflow-hidden flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-xl font-medium">
+                {p.initial}
+              </div>
+              <div className="absolute bottom-2 left-2 bg-[#202124] px-2 py-0.5 rounded text-xs flex items-center gap-1">
+                <MicOff size={12} className="text-red-400" />
+                {p.name}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Meeting Controls */}
+      <div className="flex items-center justify-center gap-4 py-4 bg-[#202124]">
+        <button className="w-12 h-12 rounded-full bg-[#3c4043] flex items-center justify-center hover:bg-[#4a4b4d] transition">
+          <MicOff size={20} className="text-red-400" />
+        </button>
+        <button className="w-12 h-12 rounded-full bg-[#3c4043] flex items-center justify-center hover:bg-[#4a4b4d] transition">
+          <Video size={20} />
+        </button>
+        <button className="w-12 h-12 rounded-full bg-[#3c4043] flex items-center justify-center hover:bg-[#4a4b4d] transition">
+          <Hand size={20} />
+        </button>
+        <button className="w-12 h-12 rounded-full bg-[#3c4043] flex items-center justify-center hover:bg-[#4a4b4d] transition">
+          <MessageSquare size={20} />
+        </button>
+        <button className="w-12 h-12 rounded-full bg-[#3c4043] flex items-center justify-center hover:bg-[#4a4b4d] transition">
+          <Users size={20} />
+        </button>
+        <button 
+          onClick={handleEndClass}
+          className="px-6 h-12 rounded-full bg-red-600 hover:bg-red-700 font-medium flex items-center gap-2 transition ml-4 shadow-lg shadow-red-500/20"
+        >
+          <PhoneOff size={20} />
+          Akhiri Sesi
+        </button>
       </div>
 
     </div>
