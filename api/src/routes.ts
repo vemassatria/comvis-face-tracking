@@ -9,7 +9,7 @@ router.get('/status-kelas/:id_sesi', async (req: Request, res: Response): Promis
   try {
     const { id_sesi } = req.params;
     const [rows] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM tb_log_atensi WHERE id_sesi = ? ORDER BY waktu_kejadian DESC LIMIT 50',
+      'SELECT l.*, s.nama_lengkap FROM tb_log_atensi l LEFT JOIN tb_siswa s ON l.nis = s.nis WHERE l.id_sesi = ? ORDER BY l.waktu_kejadian DESC LIMIT 50',
       [id_sesi]
     );
     return res.json({ status: 'success', id_sesi, data: rows });

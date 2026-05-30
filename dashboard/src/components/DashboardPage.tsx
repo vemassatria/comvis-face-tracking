@@ -118,7 +118,7 @@ export default function DashboardPage({ sessionData, onLeave }: DashboardPagePro
                     <div className="flex-1">
                       <h4 className={`font-bold text-lg leading-tight mb-1 ${style.title}`}>{log.kategori}</h4>
                       <div className="flex flex-col gap-1 text-sm text-slate-600 mt-2">
-                        <span className="font-semibold text-slate-800">NIS: {log.nis}</span>
+                        <span className="font-semibold text-slate-800">Siswa: {log.nama_lengkap || 'Siswa'} ({log.nis})</span>
                         <div className="flex items-center justify-between mt-1 pt-2 border-t border-slate-200/50">
                           <span className="flex items-center gap-1"><History size={14} className="opacity-50" /> {log.durasi_detik} dtk</span>
                           <span className="text-xs font-medium opacity-70">{log.waktu_kejadian}</span>
