@@ -1,6 +1,6 @@
 import { FaceAnalyzer } from '../lib/FaceAnalyzer';
 
-const API_BASE_URL = 'https://api-classinsight.onrender.com/api';
+const API_BASE_URL = 'https://comvis-face-tracking.onrender.com/api';
 let analyzer: FaceAnalyzer | null = null;
 let stream: MediaStream | null = null;
 let requestRef = 0;
